@@ -1,13 +1,8 @@
 extern crate systemstat;
 
-use serenity::async_trait;
+use serenity::{async_trait, model::id::UserId};
 use serenity::client::{Client, Context, EventHandler};
 use serenity::model::channel::Message;
-use serenity::model::guild::Member;
-use serenity::model::id::UserId;
-//use serenity::model::error::Error;
-//use serenity::prelude::SerenityError::Error;
-use serenity::model::prelude::guild;
 use serenity::framework::standard::{
     StandardFramework,
     CommandResult,
@@ -28,7 +23,7 @@ use std::time::Duration;
 use systemstat::{System, Platform, saturating_sub_bytes};
 
 #[group]
-#[commands(duden, the_missile, poll, bot_info, kick)]
+#[commands(duden, the_missile, poll, bot_info, kick, ban, unban)]
 
 struct General;
 
@@ -55,8 +50,8 @@ async fn main() {
         .configure(|c| c.prefix("$")) 
         .group(&GENERAL_GROUP);
 
-    //let token_tmp=fs::read_to_string("external/token");
-    //let token=env::var(fs::read_to_string("external/token")).expect("token");
+    //let token_tmp=fs::read_to_string("external/token_dev");
+    //let token=env::var(&token_tmp).expect("token");
 
     let mut client=Client::builder("ODMwMTQzNTI2MzM0ODkwMDA0.YHCZZw.dHDt7OroeagSX88LYEukB7A5PoE")
         .event_handler(Handler)
@@ -150,6 +145,7 @@ async fn bot_info(ctx: &Context, msg: &Message) -> CommandResult {
     let message=msg.channel_id.send_message(&ctx, |m| {
         m.content("Collecting system information...")
     }).await;
+    if let Err(why)=message{println!("Error sending message: {}", why);}
     match sys.cpu_load_aggregate() {
         Ok(cpu)=> {
             thread::sleep(Duration::from_secs(1));
@@ -186,43 +182,64 @@ async fn bot_info(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
-
 //mod commands
 #[command]
 async fn kick(ctx: &Context, msg: &Message) -> CommandResult {
-    println!("$kick, {:?}", msg.author);
-    println!("{:?}", msg.mentions);
-        
-    //for x in &msg.mentions {
-    //    println!("{}", x); 
-    //}
-
     let member=&msg.mentions[0];
-    let guild=Some(msg.guild_id);
+    let guild=msg.guild_id.unwrap();
 
-    println!("{:?}", member1);
-
-    //println!("{:?}", embed_author);
-
-    println!("{:?}", msg.member(&ctx.http).await.unwrap().roles(&ctx.cache).await.unwrap());
-    println!("{:?}", msg.guild_id);
-
-    /*if msg.member(&ctx.http).await.unwrap().roles(&ctx.cache).await.unwrap().iter().any(|r| r.permissions.kick_members()) {
-        //let member=msg.mentions.await.unwrap().UserId.await.unwrap().iter();
-        match guild.kick_with_reason(cache_http.http(), &member, "").await {
+    if msg.member(&ctx.http).await.unwrap().roles(&ctx.cache).await.unwrap().iter().any(|r| r.permissions.kick_members()) {
+        match guild.kick(ctx, member).await {
             Ok(()) => println!("Successfully kicked member"),
             _ => {},
         }
-
         let message=msg.channel_id.send_message(&ctx, |m| m.content("User kicked")).await;
         if let Err(why)=message{println!("Error sending message: {}", why);}
     }
-
     else {
         let message=msg.channel_id.send_message(&ctx, |m| m.content("You dont have premissiones to kick members")).await;
         if let Err(why)=message{println!("Error sending message: {}", why);}
-    }*/
+    }
     Ok(())
 }
 
- 
+#[command]
+async fn ban(ctx: &Context, msg: &Message) -> CommandResult {
+    let member=&msg.mentions[0];
+    let guild=msg.guild_id.unwrap();
+
+    if msg.member(&ctx.http).await.unwrap().roles(&ctx.cache).await.unwrap().iter().any(|r| r.permissions.ban_members()) {
+        match guild.ban(&ctx, member, 0).await {
+            Ok(()) => println!("Successfully banned member"),
+            _ => {},
+        }
+        let message=msg.channel_id.send_message(&ctx, |m| m.content("User banned")).await;
+        if let Err(why)=message{println!("Error sending message: {}", why);}
+    }
+    else {
+        let message=msg.channel_id.send_message(&ctx, |m| m.content("You dont have premissiones to ban members")).await;
+        if let Err(why)=message{println!("Error sending message: {}", why);}
+    }
+    Ok(())
+}
+
+#[command]
+async fn unban(ctx: &Context, msg: &Message) -> CommandResult {
+    let user_id=msg.content[2..].split_once(" ").unwrap();
+    let member=UserId(user_id.1.parse::<u64>().unwrap());
+    let guild=msg.guild_id.unwrap();
+
+    if msg.member(&ctx.http).await.unwrap().roles(&ctx.cache).await.unwrap().iter().any(|r| r.permissions.ban_members()) {
+        match guild.unban(&ctx, member).await {
+            Ok(()) => println!("Successfully unbanned member"),
+            _ => {},
+        }
+        let message=msg.channel_id.send_message(&ctx, |m| m.content("User unbanned")).await;
+        if let Err(why)=message{println!("Error sending message: {}", why);}
+    }
+    else {
+        let message=msg.channel_id.send_message(&ctx, |m| m.content("You dont have premissiones to unban members")).await;
+        if let Err(why)=message{println!("Error sending message: {}", why);}
+    }
+    Ok(())
+}
