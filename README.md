@@ -4,9 +4,7 @@ Rust discord bot (dev version)
 TODO List:
 
 Mod shit:
-  Kick
-  Ban
-  Unban
+  Unban schön machen
   Mute
   Unmute
 
