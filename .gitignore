@@ -1,2 +1,4 @@
 /target
+/external/token
+/external/token_dev
 Cargo.lock
