@@ -12,11 +12,9 @@ use serenity::framework::standard::{
     }
 };
 
-//use std::env;
 use std::fs;
 use std::fmt;
 use std::fmt::Debug;
-//use json::parse;
 
 use std::thread;
 use std::time::Duration;
@@ -68,13 +66,7 @@ async fn main() {
 //fun commands
 #[command]
 async fn foo(ctx: &Context, msg: &Message) -> CommandResult {
-    //println!("$foo_rs, {:?}", msg.author);
-    //println!("{:?}", msg.content);
-    
     let args=msg.content[4..].split_once(" ").unwrap();
-
-    //println!("{:?}", args.1);
-
     let message=msg.channel_id.send_message(&ctx, |m| m.content(&args.1)).await;
     if let Err(why)=message{println!("Error sending message: {}", why);}
     
@@ -86,8 +78,6 @@ async fn duden(ctx: &Context, msg: &Message) -> CommandResult {
     println!("$duden, {:?}", msg.author);
     let duden=fs::read_to_string("external/duden")
         .expect("Something went wrong reading the file");
-
-    //msg.reply(ctx, &duden).await?;
 
     let message=msg.channel_id.send_message(&ctx, |m| m.content(&duden)).await;
     if let Err(why)=message{println!("Error sending message: {}", why);}
