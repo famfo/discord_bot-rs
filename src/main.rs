@@ -36,9 +36,6 @@ async fn main() {
         .group(&GENERAL_GROUP);
 
     let token = fs::read_to_string("external/token/token_dev").unwrap();
-    //let token=env::var(&token_tmp).expect("token");
-
-    //let token = "ODMwMTQzNTI2MzM0ODkwMDA0.YHCZZw.dHDt7OroeagSX88LYEukB7A5PoE"; 
 
     let mut client=Client::builder(&token)
         .event_handler(Handler)
