@@ -13,29 +13,16 @@ use serenity::framework::standard::{
 };
 
 use std::fs;
-use std::fmt;
-use std::fmt::Debug;
-
 use std::thread;
 use std::time::Duration;
 use systemstat::{System, Platform, saturating_sub_bytes};
 
 #[group]
-#[commands(duden, the_missile, poll, bot_info, kick, ban, unban)]
+#[commands(ban, bot_info, duden, foo, help, kick, mute, poll, the_missile, unban)]
 
 struct General;
 
 struct Handler;
-
-struct EmbedAuthor<Author> {
-    embed_author: Option<Author>
-}
-
-impl <Author: Debug> std::fmt::Display for EmbedAuthor<Author> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Poll by: {:?}", self.embed_author)
-    }
-}
 
 #[async_trait]
 impl EventHandler for Handler {
@@ -44,31 +31,60 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-    let framework=StandardFramework::new()
+    let framework = StandardFramework::new()
         .configure(|c| c.prefix("$")) 
         .group(&GENERAL_GROUP);
 
-    //let token_tmp=fs::read_to_string("external/token_dev");
+    let token = fs::read_to_string("external/token/token_dev").unwrap();
     //let token=env::var(&token_tmp).expect("token");
 
-    let mut client=Client::builder("ODMwMTQzNTI2MzM0ODkwMDA0.YHCZZw.dHDt7OroeagSX88LYEukB7A5PoE")
+    //let token = "ODMwMTQzNTI2MzM0ODkwMDA0.YHCZZw.dHDt7OroeagSX88LYEukB7A5PoE"; 
+
+    let mut client=Client::builder(&token)
         .event_handler(Handler)
         .framework(framework)
         .await
         .expect("Error creating client");
 
-    if let Err(why)=client.start().await {
+    if let Err(why) = client.start().await {
         println!("Error: {:?}", why);
     }
+}
+
+#[command]
+async fn help(ctx: &Context, msg: &Message) -> CommandResult {
+    let message = msg.channel_id.send_message(&ctx, |m|{
+        m.embed(|e|{
+            e.title("Commands")
+             .description("All available commands:")
+             .field("$ban", "Bans the mentioned user.", false)
+             .field("$bot_info", "General information about the bot.", false)
+             .field("$duden", "Tell someone to speak german!", false)
+             .field("$foo", "Returns what you just typed.", false)
+             .field("$help", "Shows this help.", false)
+             .field("$kick", "Kicks the mentioned user.", false)
+             .field("$poll", "Starts a poll.", false)
+             .field("$the_missile", "The missile knows where it is...", false)
+             .field("$unban", "Unbans a user by their user ID.", false)
+             .footer(|f|
+                f.icon_url("https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png")
+                 .text("Coded it rust-lang")
+             )
+        })
+    }).await;
+
+    if let Err(why) = message{println!("Error sending message: {}", why);}
+
+    Ok(())
 }
 
 
 //fun commands
 #[command]
 async fn foo(ctx: &Context, msg: &Message) -> CommandResult {
-    let args=msg.content[4..].split_once(" ").unwrap();
-    let message=msg.channel_id.send_message(&ctx, |m| m.content(&args.1)).await;
-    if let Err(why)=message{println!("Error sending message: {}", why);}
+    let args = msg.content[4..].split_once(" ").unwrap();
+    let message = msg.channel_id.send_message(&ctx, |m| m.content(&args.1)).await;
+    if let Err(why) = message{println!("Error sending message: {}", why);}
     
     Ok(())
 }
@@ -76,11 +92,11 @@ async fn foo(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 async fn duden(ctx: &Context, msg: &Message) -> CommandResult {
     println!("$duden, {:?}", msg.author);
-    let duden=fs::read_to_string("external/duden")
+    let duden = fs::read_to_string("external/duden")
         .expect("Something went wrong reading the file");
 
-    let message=msg.channel_id.send_message(&ctx, |m| m.content(&duden)).await;
-    if let Err(why)=message{println!("Error sending message: {}", why);}
+    let message = msg.channel_id.send_message(&ctx, |m| m.content(&duden)).await;
+    if let Err(why) = message{println!("Error sending message: {}", why);}
 
     Ok(())
 }
@@ -88,10 +104,10 @@ async fn duden(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 async fn the_missile(ctx: &Context, msg: &Message) -> CommandResult {
     println!("$the_missile, {:?}", msg.author);
-    let the_missile=fs::read_to_string("external/theMissile")
+    let the_missile = fs::read_to_string("external/theMissile")
         .expect("Something went wrong reading the file");
     
-    let embed=msg.channel_id.send_message(&ctx, |m|{
+    let embed = msg.channel_id.send_message(&ctx, |m|{
         m.embed(|e|{
             e.title("The Missile:")
              .description(&the_missile)
@@ -101,30 +117,34 @@ async fn the_missile(ctx: &Context, msg: &Message) -> CommandResult {
             })
         })
     }).await;
-    if let Err(why)=embed{println!("Error sending message: {}", why);}
+    if let Err(why) = embed{println!("Error sending message: {}", why);}
 
     Ok(())
 }
 
 #[command]
 async fn poll(ctx: &Context, msg: &Message) -> CommandResult {
-    println!("$poll, {:?}", msg.author);
-    let args=msg.content[2..].split_once(" ").unwrap();  
+    if msg.content == "$poll" {
+        let empty_message = msg.channel_id.send_message(&ctx, |m| m.content("No topic for the poll.")).await;
 
-    let embed=msg.channel_id.send_message(&ctx, |m|{
-        m.embed(|e| {
-            e.title("Poll:")
-            .description(args.1)
-            .footer(|f|{
-                f.icon_url("https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png")
-                .text("Coded it rust-lang")
+        if let Err(why) = empty_message{println!("Error sending message: {}", why);}
+    } else {
+        let args = msg.content[2..].split_once(" ").unwrap();
+        let embed = msg.channel_id.send_message(&ctx, |m|{
+            m.embed(|e| {
+                e.title("Poll:")
+                .description(args.1)
+                .footer(|f|{
+                    f.icon_url("https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png")
+                    .text("Coded it rust-lang")
+                })
             })
-        })
-    }).await;
+        }).await;
     
-    let poll=embed.unwrap();
-    poll.react(&ctx,'✅').await.unwrap();
-    poll.react(&ctx,'❌').await.unwrap();
+        let poll = embed.unwrap();
+        poll.react(&ctx,'✅').await.unwrap();
+        poll.react(&ctx,'❌').await.unwrap();
+    }
 
     Ok(())
 }
@@ -132,37 +152,37 @@ async fn poll(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 async fn bot_info(ctx: &Context, msg: &Message) -> CommandResult {
     let sys = System::new();
-    let message=msg.channel_id.send_message(&ctx, |m| {
+    let message = msg.channel_id.send_message(&ctx, |m| {
         m.content("Collecting system information...")
     }).await;
-    if let Err(why)=message{println!("Error sending message: {}", why);}
+    if let Err(why) = message{println!("Error sending message: {}", why);}
     match sys.cpu_load_aggregate() {
-        Ok(cpu)=> {
+        Ok(cpu) => {
             thread::sleep(Duration::from_secs(1));
 
             let cpu = cpu.done().unwrap();
-            let cpu_usage_user=cpu.user*100.0;
-            let cpu_usage_system=cpu.system*100.0;
+            let cpu_usage_user = cpu.user*100.0;
+            let cpu_usage_system = cpu.system*100.0;
 
             match sys.memory() {
-                Ok(mem)=> {
-                    let mem_usage=saturating_sub_bytes(mem.total, mem.free);
-                    let embed=msg.channel_id.send_message(&ctx, |m|{
+                Ok(mem) => {
+                    let mem_usage = saturating_sub_bytes(mem.total, mem.free);
+                    let embed = msg.channel_id.send_message(&ctx, |m|{
                         m.embed(|e| {
                             e.title("Yet Another Moderation Bot#3550")
-                            .color(109632)
-                            .description("Bot made by famfo#0227
+                             .color(109_632)
+                             .description("Bot made by famfo#0227
                                           Yea I made this bot because I was bored.")
-                            .field("CPU usage user (in %):", cpu_usage_user, false)    
-                            .field("CPU usage system (in %):", cpu_usage_system, false)
-                            .field("RAM usage", mem_usage, false)
-                            .footer(|f|{
+                             .field("CPU usage user (in %):", cpu_usage_user, false)    
+                             .field("CPU usage system (in %):", cpu_usage_system, false)
+                             .field("RAM usage", mem_usage, false)
+                             .footer(|f|{
                                 f.icon_url("https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png")          
-                                .text("Coded it rust-lang")
+                                 .text("Coded it rust-lang")
                             })
                         })
                     }).await;
-                    if let Err(why)=embed{println!("Error sending message: {}", why);}
+                    if let Err(why) = embed{println!("Error sending message: {}", why);}
                 }
                 Err(x) => println!("Memory: error: {}", x)
             }
@@ -175,61 +195,74 @@ async fn bot_info(ctx: &Context, msg: &Message) -> CommandResult {
 //mod commands
 #[command]
 async fn kick(ctx: &Context, msg: &Message) -> CommandResult {
-    let member=&msg.mentions[0];
-    let guild=msg.guild_id.unwrap();
+    let member = &msg.mentions[0];
+    let guild = msg.guild_id.unwrap();
 
     if msg.member(&ctx.http).await.unwrap().roles(&ctx.cache).await.unwrap().iter().any(|r| r.permissions.kick_members()) {
-        match guild.kick(ctx, member).await {
-            Ok(()) => println!("Successfully kicked member"),
-            _ => {},
-        }
-        let message=msg.channel_id.send_message(&ctx, |m| m.content("User kicked")).await;
-        if let Err(why)=message{println!("Error sending message: {}", why);}
+        if let Ok(()) = guild.kick(ctx, member).await{println!("Successfully kicked member")}
+        let message = msg.channel_id.send_message(&ctx, |m| m.content("User kicked")).await;
+        if let Err(why) = message{println!("Error sending message: {}", why)}
     }
     else {
-        let message=msg.channel_id.send_message(&ctx, |m| m.content("You dont have premissiones to kick members")).await;
-        if let Err(why)=message{println!("Error sending message: {}", why);}
+        let message = msg.channel_id.send_message(&ctx, |m| m.content("You dont have premissiones to kick members")).await;
+        if let Err(why) = message{println!("Error sending message: {}", why);}
     }
     Ok(())
 }
 
 #[command]
 async fn ban(ctx: &Context, msg: &Message) -> CommandResult {
-    let member=&msg.mentions[0];
-    let guild=msg.guild_id.unwrap();
+    let member = &msg.mentions[0];
+    let guild = msg.guild_id.unwrap();
 
     if msg.member(&ctx.http).await.unwrap().roles(&ctx.cache).await.unwrap().iter().any(|r| r.permissions.ban_members()) {
-        match guild.ban(&ctx, member, 0).await {
-            Ok(()) => println!("Successfully banned member"),
-            _ => {},
-        }
-        let message=msg.channel_id.send_message(&ctx, |m| m.content("User banned")).await;
-        if let Err(why)=message{println!("Error sending message: {}", why);}
+        if let Ok(()) = guild.ban(&ctx, member, 0).await{println!("Successfully banned member")}
+        let message = msg.channel_id.send_message(&ctx, |m| m.content("User banned")).await;
+        if let Err(why) = message{println!("Error sending message: {}", why)}
     }
     else {
-        let message=msg.channel_id.send_message(&ctx, |m| m.content("You dont have premissiones to ban members")).await;
-        if let Err(why)=message{println!("Error sending message: {}", why);}
+        let message = msg.channel_id.send_message(&ctx, |m| m.content("You dont have premissiones to ban members")).await;
+        if let Err(why) = message{println!("Error sending message: {}", why)}
     }
     Ok(())
 }
 
 #[command]
 async fn unban(ctx: &Context, msg: &Message) -> CommandResult {
-    let user_id=msg.content[2..].split_once(" ").unwrap();
-    let member=UserId(user_id.1.parse::<u64>().unwrap());
-    let guild=msg.guild_id.unwrap();
+    let user_id = msg.content[2..].split_once(" ").unwrap();
+    let user_id = UserId(user_id.1.parse::<u64>().unwrap());
+    let guild = msg.guild_id.unwrap();
 
     if msg.member(&ctx.http).await.unwrap().roles(&ctx.cache).await.unwrap().iter().any(|r| r.permissions.ban_members()) {
-        match guild.unban(&ctx, member).await {
-            Ok(()) => println!("Successfully unbanned member"),
-            _ => {},
-        }
-        let message=msg.channel_id.send_message(&ctx, |m| m.content("User unbanned")).await;
-        if let Err(why)=message{println!("Error sending message: {}", why);}
+        if let Ok(()) = guild.unban(&ctx, user_id).await{println!("Successfully unbanned member")}
+        let message = msg.channel_id.send_message(&ctx, |m| m.content("User unbanned")).await;
+        if let Err(why) = message{println!("Error sending message: {}", why);}
     }
     else {
-        let message=msg.channel_id.send_message(&ctx, |m| m.content("You dont have premissiones to unban members")).await;
-        if let Err(why)=message{println!("Error sending message: {}", why);}
+        let message = msg.channel_id.send_message(&ctx, |m| m.content("You dont have premissiones to unban members")).await;
+        if let Err(why) = message{println!("Error sending message: {}", why);}
+    }
+    Ok(())
+}
+
+#[command]
+async fn mute(ctx: &Context, msg: &Message) -> CommandResult {
+    if let Some(guild) = msg.guild_id.unwrap().to_guild_cached(&ctx).await {
+        if let Some(role) = guild.role_by_name("muted") {
+            println!("{:?}", role);
+        } else {
+            println!("Test");
+        }
+    }
+
+    if msg.member(&ctx.http).await.unwrap().roles(&ctx.cache).await.unwrap().iter().any(|r| r.permissions.manage_roles()) {
+        //let user_id=msg.content[2..].split_once(" ").unwrap();
+        //let member=UserId(user_id.1.parse::<u64>().unwrap());
+        //let guild = msg.guild_id.unwrap();
+
+        
+
+        //if let Ok(()) = guild.give_roles(&ctx, member, role).await{println!("Siccesfully muted member")}
     }
     Ok(())
 }
