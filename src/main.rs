@@ -26,7 +26,9 @@ struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-
+    async fn message(&self, context: Context, msg: Message) {
+        
+    }
 }
 
 #[tokio::main]

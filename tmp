@@ -1,0 +1,7 @@
+Database structure leveling system:
+
+- Guild
+    - User
+        - Messages send
+        - Level 
+    
