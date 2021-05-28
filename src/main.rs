@@ -107,9 +107,11 @@ async fn main() {
                               .field("CPU usage user (in %):", cpu_usage_user, false)    
                               .field("CPU usage system (in %):", cpu_usage_system, false)
                               .field("RAM usage", mem_usage, false)
+                              .field("License", "This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.", false)
+                              .field("Source Code", "https://github.com/famfo/discord_bot-rs", false)
                               .footer(|f|{
-                                 f.icon_url("https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png")          
-                                  .text("Coded it rust-lang")
+                                    f.icon_url("https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png")                                      
+                                     .text("Coded it rust-lang")
                              })
                          })
                      }).await;
@@ -170,6 +172,8 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
              .field("$poll", "Starts a poll.", false)
              .field("$the_missile", "The missile knows where it is...", false)
              .field("$unban", "Unbans a user by their user ID.", false)
+             .field("License", "This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.", false)
+             .field("Source Code", "https://github.com/famfo/discord_bot-rs", false)
              .footer(|f|
                 f.icon_url("https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png")
                  .text("Coded it rust-lang")
@@ -221,7 +225,7 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
                  .description(args.1)
                  .footer(|f|{
                      f.icon_url("https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png")
-                     .text("Coded it rust-lang")
+                      .text("Coded it rust-lang")
                  })
              })
          }).await;
@@ -250,7 +254,7 @@ async fn the_missile(ctx: &Context, msg: &Message) -> CommandResult {
              .description(&the_missile)
              .footer(|f|{
                 f.icon_url("https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png")
-                .text("Coded it rust-lang")
+                 .text("Coded it rust-lang")
             })
         })
     }).await;
@@ -290,13 +294,12 @@ async fn unban(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 async fn mute(ctx: &Context, msg: &Message) -> CommandResult {
     if msg.member(&ctx.http).await.unwrap().roles(&ctx.cache).await.unwrap().iter().any(|r| r.permissions.manage_roles()) {
-        let user_id = msg.content[2..].split_once(" ").unwrap();
-        let user_id = UserId(user_id.1.parse::<u64>().unwrap());
+        let user_id = &msg.mentions[0];
         let guild = msg.guild_id.unwrap();
         
         if let Some(guild) = msg.guild_id.unwrap().to_guild_cached(&ctx).await {
             if let Some(role) = guild.role_by_name("muted") {
-                
+                //guild.edit_member(&ctx, user_id, |m| m.roles(role.id.iter()));
             } else {
                 println!("Test2");
             }
