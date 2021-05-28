@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
 extern crate systemstat;
 
 use serenity::{async_trait, model::id::UserId};
@@ -27,7 +31,7 @@ struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, context: Context, msg: Message) {
-        
+           
     }
 }
 
@@ -285,22 +289,19 @@ async fn unban(ctx: &Context, msg: &Message) -> CommandResult {
  */
 #[command]
 async fn mute(ctx: &Context, msg: &Message) -> CommandResult {
-    if let Some(guild) = msg.guild_id.unwrap().to_guild_cached(&ctx).await {
-        if let Some(role) = guild.role_by_name("muted") {
-            println!("{:?}", role);
-        } else {
-            println!("Test");
-        }
-    }
-
     if msg.member(&ctx.http).await.unwrap().roles(&ctx.cache).await.unwrap().iter().any(|r| r.permissions.manage_roles()) {
-        //let user_id=msg.content[2..].split_once(" ").unwrap();
-        //let member=UserId(user_id.1.parse::<u64>().unwrap());
-        //let guild = msg.guild_id.unwrap();
-
+        let user_id = msg.content[2..].split_once(" ").unwrap();
+        let user_id = UserId(user_id.1.parse::<u64>().unwrap());
+        let guild = msg.guild_id.unwrap();
         
-
-        //if let Ok(()) = guild.give_roles(&ctx, member, role).await{println!("Siccesfully muted member")}
+        if let Some(guild) = msg.guild_id.unwrap().to_guild_cached(&ctx).await {
+            if let Some(role) = guild.role_by_name("muted") {
+                
+            } else {
+                println!("Test2");
+            }
+        }
     }
     Ok(())
 }
+
