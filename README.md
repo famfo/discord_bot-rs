@@ -16,8 +16,8 @@ If you want a version of the bot hosted by me, you can use [this link](https://d
 
 #### TODO List:
  * Mod shit:
-    * Unban schön machen
-    * Mute Rolle erstellen wenn diese noch nicht existiert
+    * Make unban useable
+    * Make the mute command create a "muted" role if it does't exist
 
  * Music shit:
     * Websdl support
