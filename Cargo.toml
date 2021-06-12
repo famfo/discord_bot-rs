@@ -4,7 +4,7 @@
 
 [package]
 name = "discord_bot-rs"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["famfo <famfo@protonmail.com>"]
 edition = "2018"
 
@@ -24,9 +24,7 @@ features=[
         "http", 
         "model", 
         "standard_framework", 
-        "utils", 
         "rustls_backend",
-        "unstable_discord_api",
         "cache",
         ]
 
