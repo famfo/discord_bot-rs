@@ -7,6 +7,7 @@ name = "discord_bot-rs"
 version = "0.1.1"
 authors = ["famfo <famfo@protonmail.com>"]
 edition = "2018"
+license = "MPL v2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
