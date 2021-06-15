@@ -6,7 +6,8 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
-## Rust discord bot (dev version)
+## Rust discord bot
+If you want a version of the bot hosted by me, you can use [this link](https://discord.com/oauth2/authorize?client_id=687981060343988254&permissions=402712646&redirect_uri=https%3A%2F%2Fgamerparty.eu&scope=bot) to invite it to your server
 
 #### How to run the bot: 
 * 1. place your token in `external/token/token` 
@@ -15,8 +16,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #### TODO List:
  * Mod shit:
-    * Make unban better
-    * Create mute role if it doesn't exist
+    * Make unban useable
+    * Make the mute command create a "muted" role if it does't exist
 
  * Music shit:
     * Websdl support
