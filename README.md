@@ -15,10 +15,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #### TODO List:
  * Mod shit:
-    * Unban schön machen
-    * Mute Rolle erstellen wenn diese noch nicht existiert
+    * Make unban better
+    * Create mute role if it doesn't exist
 
  * Music shit:
     * Websdl support
-    * Youtube playback
 
