@@ -21,5 +21,4 @@ If you want a version of the bot hosted by me, you can use [this link](https://d
 
  * Music shit:
     * Websdl support
-    * Youtube playback
 
