@@ -4,25 +4,24 @@
 
 extern crate systemstat;
 
-use serenity::{async_trait, model::id::UserId};
-use serenity::client::{Client, Context, EventHandler};
-use serenity::model::channel::Message;
-use serenity::framework::standard::{
-    Args,
-    StandardFramework,
-    CommandResult,
-    macros::{
-        command,
-        group
-    }
-};
-
-use songbird::SerenityInit;
-
 use std::fs;
 use std::thread;
 use std::time::Duration;
-use systemstat::{System, Platform, saturating_sub_bytes};
+
+use serenity::{async_trait, model::id::UserId};
+use serenity::client::{Client, Context, EventHandler};
+use serenity::framework::standard::{
+    Args,
+    CommandResult,
+    macros::{
+        command,
+        group,
+    },
+    StandardFramework,
+};
+use serenity::model::channel::Message;
+use songbird::SerenityInit;
+use systemstat::{Platform, saturating_sub_bytes, System};
 
 #[group]
 #[commands(ban, bot_info, duden, foo, help, kick, mute, poll, the_missile, unban, unmute, join_vc, leave_vc, play)]
@@ -33,10 +32,7 @@ struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    // XP leveling system maby soon
-    /*async fn message(&self, context: Context, msg: Message) {
-           
-    }*/
+
 }
 
 #[tokio::main]
@@ -68,7 +64,7 @@ async fn main() {
 async fn ban(ctx: &Context, msg: &Message) -> CommandResult {
     // member to ban
     let member = &msg.mentions[0];
-    // guild the message is send in
+    // guild the message is sent in
     let guild = msg.guild_id.unwrap();
  
     // check if the member has rights to ban users
@@ -79,7 +75,7 @@ async fn ban(ctx: &Context, msg: &Message) -> CommandResult {
         if let Err(why) = message{println!("Error sending message: {}", why);}
     }
     else {
-        let message = msg.channel_id.say(&ctx, "You dont have premissiones to ban members").await;
+        let message = msg.channel_id.say(&ctx, "You dont have permissions to ban members").await;
         if let Err(why) = message{println!("Error sending message: {}", why);}
     }
     Ok(())
@@ -149,16 +145,17 @@ async fn duden(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 /*
- * Fun comand
+ * Fun command
  * foo: returns what you typed
  */
 #[command]
 async fn foo(ctx: &Context, msg: &Message) -> CommandResult {
     // Get the content of the send message 
     let args = msg.content[4..].split_once(" ").unwrap();
-    let message = msg.channel_id.say(&ctx, &args.1).await;
-    if let Err(why) = message{println!("Error sending message: {}", why);}
-     
+    let to_send = ("{} | {}", args.1, msg.author);
+    let message = msg.channel_id.say(&ctx, to_send).await;
+    if let Err(why) = message { println!("Error sending message: {}", why); }
+
     Ok(())
 }
 
@@ -171,24 +168,24 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
     let message = msg.channel_id.send_message(&ctx, |m|{
         m.embed(|e|{
             e.title("Commands")
-             .description("All available commands:")
-             .field("$ban", "Bans the mentioned user.", false)
-             .field("$bot_info", "General information about the bot.", false)
-             .field("$duden", "Tell someone to speak german!", false)
-             .field("$foo", "Returns what you just typed.", false)
-             .field("$help", "Shows this help.", false)
-             .field("$kick", "Kicks the mentioned user.", false)
-             .field("$leave_vc", "Leaves the Voice Channel the user is in.", false)
-             .field("$mute", "Mutes a member.", false)
-             .field("$play", "Plays audio from a given URL", false)
-             .field("$poll", "Starts a poll.", false)
-             .field("$the_missile", "The missile knows where it is...", false)
-             .field("$unban", "Unbans a user by their user ID.", false)
-             .field("$unban", "Unmutes a member.", false)
-             .field("$join_vc", "Joins the Voice Channel the user is in.", false)
-             .field("License", "This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.", false)
-             .field("Source Code", "https://github.com/famfo/discord_bot-rs", false)
-             .field("Issues", "If you have questiones, encouter bugs or have feature requests, considering opening an issue on github", false)
+                .description("All available commands:")
+                .field("$ban", "Bans the mentioned user.", false)
+                .field("$bot_info", "General information about the bot.", false)
+                .field("$duden", "Tell someone to speak german!", false)
+                .field("$foo", "Returns what you just typed.", false)
+                .field("$help", "Shows this help.", false)
+                .field("$kick", "Kicks the mentioned user.", false)
+                .field("$leave_vc", "Leaves the Voice Channel the user is in.", false)
+                .field("$mute", "Mutes a member.", false)
+                .field("$play", "Plays audio from a given URL", false)
+                .field("$poll", "Starts a poll.", false)
+                .field("$the_missile", "The missile knows where it is...", false)
+                .field("$unban", "Unbans a user by their user ID.", false)
+                .field("$unban", "Unmutes a member.", false)
+                .field("$join_vc", "Joins the Voice Channel the user is in.", false)
+                .field("License", "This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.", false)
+                .field("Source Code", "https://github.com/famfo/discord_bot-rs", false)
+                .field("Issues", "If you have questions, encounter bugs or have feature requests, considering opening an issue on github", false)
              .footer(|f|
                 f.icon_url("https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png")
                  .text("Coded it rust-lang")
@@ -217,7 +214,7 @@ async fn kick(ctx: &Context, msg: &Message) -> CommandResult {
         if let Err(why) = message{println!("Error sending message: {}", why);} 
     } 
     else {
-        let message = msg.channel_id.say(&ctx, "You dont have premissiones to kick members").await;
+        let message = msg.channel_id.say(&ctx, "You dont have permissions to kick members").await;
         if let Err(why) = message{println!("Error sending message: {}", why);}
     }
     Ok(())
@@ -233,7 +230,7 @@ async fn leave_vc(ctx: &Context, msg: &Message) -> CommandResult {
     let guild = msg.guild_id.unwrap();
 
     let manager = songbird::get(ctx).await
-        .expect("Songbird Voice client placed in at initalisation.").clone();
+        .expect("Songbird Voice client placed in at initialisation.").clone();
     let has_handler = manager.get(guild).is_some();
 
     if has_handler {
@@ -249,13 +246,13 @@ async fn leave_vc(ctx: &Context, msg: &Message) -> CommandResult {
         if let Err(why) = message{println!("Error sending message {}", why);}
     }
     Ok(())
-} 
+}
 
- /*
- * Moderation command
- * mute: mute a member of a guild 
- * TODO: create mute role if it does't exist
- */
+/*
+* Moderation command
+* mute: mute a member of a guild
+* TODO: create mute role if it doesn't exist
+*/
 #[command]
 #[only_in(guilds)]
 async fn mute(ctx: &Context, msg: &Message) -> CommandResult {
@@ -264,7 +261,7 @@ async fn mute(ctx: &Context, msg: &Message) -> CommandResult {
         
         // Get the guild the member is in
         if let Some(guild) = msg.guild_id.unwrap().to_guild_cached(&ctx).await {
-            // Get the muted role by it's name
+            // Get the muted role by its name
             if let Some(role) = guild.role_by_name("muted") {
                 // Assign the mute role to the member
                 let mute = guild.member(&ctx, user_id).await.unwrap().add_role(&ctx, role.id).await;
@@ -395,8 +392,8 @@ async fn the_missile(ctx: &Context, msg: &Message) -> CommandResult {
 
 /* 
  * Moderation command
- * unban: unban a member using it's userID
- * TODO: make this actually useable
+ * unban: unban a member using its userID
+ * TODO: make this actually usable
  */
 #[command]
 #[only_in(guilds)]
@@ -411,7 +408,7 @@ async fn unban(ctx: &Context, msg: &Message) -> CommandResult {
         if let Err(why) = message{println!("Error sending message: {}", why);}
     }
     else {
-        let message = msg.channel_id.say(&ctx, "You dont have premissiones to unban members").await;
+        let message = msg.channel_id.say(&ctx, "You dont have permissions to unban members").await;
         if let Err(why) = message{println!("Error sending message: {}", why);}
     }
     Ok(())
@@ -432,7 +429,7 @@ async fn unmute(ctx: &Context, msg: &Message) -> CommandResult {
         if guild.member(&ctx, user_id).await.unwrap().roles(&ctx).await.unwrap().iter().any(|r| matches!(r.name.clone().as_str(), "muted")) {
             // Get guild the member is in
             if let Some(guild) = msg.guild_id.unwrap().to_guild_cached(&ctx).await {
-                // Get the muted role by it's name 
+                // Get the muted role by its name
                 if let Some(role) = guild.role_by_name("muted") {
                     // Remove the muted role from the member
                     let unmute = guild.member(&ctx, user_id).await.unwrap().remove_role(&ctx, role.id).await;
@@ -453,7 +450,7 @@ async fn unmute(ctx: &Context, msg: &Message) -> CommandResult {
 
 /*
  * Voice command
- * join_vc: joins the voic channel the user is in
+ * join_vc: joins the voice channel the user is in
  */
 #[command]
 #[only_in(guilds)]
