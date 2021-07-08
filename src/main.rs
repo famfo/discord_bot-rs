@@ -152,8 +152,8 @@ async fn duden(ctx: &Context, msg: &Message) -> CommandResult {
 async fn foo(ctx: &Context, msg: &Message) -> CommandResult {
     // Get the content of the send message 
     let args = msg.content[4..].split_once(" ").unwrap();
-    let to_send = ("{} | {}", args.1, msg.author);
-    let message = msg.channel_id.say(&ctx, to_send).await;
+    //let to_send = ("{} | <@{}>", args.1, msg.author.id.as_u64());
+    let message = msg.channel_id.say(&ctx, &args.1).await;
     if let Err(why) = message { println!("Error sending message: {}", why); }
 
     Ok(())
