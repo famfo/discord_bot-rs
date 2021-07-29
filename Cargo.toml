@@ -4,10 +4,9 @@
 
 [package]
 name = "discord_bot-rs"
-version = "0.1.1"
+version = "0.1.0"
 authors = ["famfo <famfo@protonmail.com>"]
 edition = "2018"
-license = "MPL v2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,6 +14,7 @@ license = "MPL v2.0"
 tokio={ version = "1.*", features = ["full"] }
 systemstat = "*"
 songbird = "*"
+dotenv = "*"
 
 [dependencies.serenity]
 default-features=false
@@ -26,9 +26,10 @@ features=[
         "http", 
         "model", 
         "standard_framework", 
+        "utils", 
         "rustls_backend",
+        "unstable_discord_api",
         "cache",
-        "voice",
         ]
 
 version="*" 
