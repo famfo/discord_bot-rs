@@ -15,21 +15,21 @@ license = "MPL v2.0"
 tokio={ version = "1.*", features = ["full"] }
 systemstat = "*"
 songbird = "*"
+dotenv = "*"
 
 [dependencies.serenity]
 default-features=false
 features=[
-        "builder", 
-        "client", 
-        "framework", 
-        "gateway", 
-        "http", 
-        "model", 
-        "standard_framework", 
+        "builder",
+        "client",
+        "framework",
+        "gateway",
+        "http",
+        "model",
+        "standard_framework",
         "rustls_backend",
         "cache",
         "voice",
         ]
 
-version="*" 
-
+version="*"
