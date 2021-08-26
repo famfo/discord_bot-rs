@@ -12,10 +12,8 @@ license = "MPL v2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio={ version = "1.*", features = ["full"] }
-systemstat = "*"
-songbird = "*"
-dotenv = "*"
+tokio={ version = "1.10", features = ["full"] }
+dotenv = "0.15"
 
 [dependencies.serenity]
 default-features=false
@@ -32,4 +30,4 @@ features=[
         "voice",
         ]
 
-version="*"
+version="0.10"

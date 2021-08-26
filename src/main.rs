@@ -2,42 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-extern crate systemstat;
-
 use serenity::client::{Client, Context, EventHandler};
 use serenity::framework::standard::{
     macros::{command, group},
-    Args, CommandResult, StandardFramework,
+    CommandResult, StandardFramework,
 };
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::{async_trait, model::id::UserId};
 
-use systemstat::{saturating_sub_bytes, Platform, System};
-
-use dotenv;
 use std::env;
-use std::fs;
-use std::thread;
-use std::time::Duration;
 
 #[group]
-#[commands(
-    ban,
-    bot_info,
-    duden,
-    foo,
-    help,
-    kick,
-    mute,
-    poll,
-    the_missile,
-    unban,
-    unmute,
-    join_vc,
-    leave_vc,
-    play
-)]
+#[commands(ban, help, kick, mute, poll, unban, unmute)]
 
 struct General;
 
@@ -113,7 +90,7 @@ async fn ban(ctx: &Context, msg: &Message) -> CommandResult {
     } else {
         let message = msg
             .channel_id
-            .say(&ctx, "You dont have permissions to ban members")
+            .say(&ctx, "You are missing permissions to ban members.")
             .await;
         if let Err(e) = message {
             println!("Error sending message: {}", e);
@@ -160,7 +137,7 @@ async fn kick(ctx: &Context, msg: &Message) -> CommandResult {
     } else {
         let message = msg
             .channel_id
-            .say(&ctx, "You dont have permissions to kick members")
+            .say(&ctx, "You are missing permissions to kick member.")
             .await;
         if let Err(e) = message {
             println!("Error sending message: {}", e);
@@ -226,6 +203,14 @@ async fn mute(ctx: &Context, msg: &Message) -> CommandResult {
                     println!("Error sending message: {}", e);
                 }
             }
+        }
+    } else {
+        let message = msg
+            .channel_id
+            .say(ctx, "You are missing permissions to mute memeber.")
+            .await;
+        if let Err(e) = message {
+            println!("Error sending message: {}", e);
         }
     }
     Ok(())
@@ -348,6 +333,14 @@ async fn unmute(ctx: &Context, msg: &Message) -> CommandResult {
                 println!("Error sending message {}", e);
             }
         }
+    } else {
+        let message = msg
+            .channel_id
+            .say(ctx, "You are missing permissions to unmute member.")
+            .await;
+        if let Err(e) = message {
+            println!("Error sending message {}", e);
+        }
     }
     Ok(())
 }
@@ -359,19 +352,12 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
             e.title("Commands")
                 .description("All available commands:")
                 .field("$ban", "Bans the mentioned user.", false)
-                .field("$bot_info", "General information about the bot.", false)
-                .field("$duden", "Tell someone to speak german!", false)
-                .field("$foo", "Returns what you just typed.", false)
-                .field("$help", "Shows this help.", false)
-                .field("$kick", "Kicks the mentioned user.", false)
-                .field("$leave_vc", "Leaves the Voice Channel the user is in.", false)
-                .field("$mute", "Mutes a member.", false)
-                .field("$play", "Plays audio from a given URL", false)
-                .field("$poll", "Starts a poll.", false)
-                .field("$the_missile", "The missile knows where it is...", false)
                 .field("$unban", "Unbans a user by their user ID.", false)
+                .field("$kick", "Kicks the mentioned user.", false)
+                .field("$mute", "Mutes a member.", false)
                 .field("$unmute", "Unmutes a member.", false)
-                .field("$join_vc", "Joins the Voice Channel the user is in.", false)
+                .field("$poll", "Starts a poll.", false)
+                .field("$help", "Shows this help.", false)
                 .field("License", "This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.", false)
                 .field("Source Code", "https://github.com/famfo/discord_bot-rs", false)
                 .field("Issues", "If you have questions, encounter bugs or have feature requests, considering opening an issue on github", false)
@@ -386,79 +372,6 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
         println!("Error sending message: {}", e);
     }
 
-    Ok(())
-}
-
-#[command]
-async fn bot_info(ctx: &Context, msg: &Message) -> CommandResult {
-    let sys = System::new();
-    let message = msg
-        .channel_id
-        .say(&ctx, "Collecting system information...")
-        .await;
-    if let Err(e) = message {
-        println!("Error sending message: {}", e);
-    }
-    match sys.cpu_load_aggregate() {
-        Ok(cpu) => {
-            thread::sleep(Duration::from_secs(1));
-
-            let cpu = cpu.done().unwrap();
-            let cpu_usage_user = cpu.user * 100.0;
-            let cpu_usage_system = cpu.system * 100.0;
-
-            match sys.memory() {
-                Ok(mem) => {
-                    let mem_usage = saturating_sub_bytes(mem.total, mem.free);
-                    let embed = msg.channel_id.send_message(&ctx, |m|{
-                        m.embed(|e| {
-                            e.title("Yet Another Moderation Bot#3550")
-                             .color(109_632)
-                             .description("Bot made by famfo#0227
-                                          Yea I made this bot because I was bored.")
-                             .field("CPU usage user (in %):", cpu_usage_user, false)
-                             .field("CPU usage system (in %):", cpu_usage_system, false)
-                             .field("RAM usage", mem_usage, false)
-                             .field("License", "This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.", false)
-                             .field("Source Code", "https://github.com/famfo/discord_bot-rs", false)
-                             .footer(|f|{
-                                   f.icon_url("https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png")
-                                    .text("Coded it rust-lang")
-                            })
-                        })
-                    }).await;
-                    if let Err(e) = embed {
-                        println!("Error sending message: {}", e);
-                    }
-                }
-                Err(x) => println!("Memory: error: {}", x),
-            }
-        }
-        Err(x) => println!("CPU load: error: {}", x),
-    }
-    Ok(())
-}
-
-#[command]
-async fn foo(ctx: &Context, msg: &Message) -> CommandResult {
-    // Get the content of the send message
-    let args = msg.content[4..].split_once(" ").unwrap();
-    let to_send = format!("{} | {}", args.1, msg.author.name);
-    let message = msg.channel_id.say(&ctx, to_send).await;
-    if let Err(e) = message {
-        println!("Error sending message: {}", e);
-    }
-    Ok(())
-}
-
-#[command]
-async fn duden(ctx: &Context, msg: &Message) -> CommandResult {
-    let duden =
-        fs::read_to_string("external/duden").expect("Something went wrong reading the file");
-    let message = msg.channel_id.say(&ctx, &duden).await;
-    if let Err(e) = message {
-        println!("Error sending message: {}", e);
-    }
     Ok(())
 }
 
@@ -492,177 +405,5 @@ async fn poll(ctx: &Context, msg: &Message) -> CommandResult {
         poll.react(&ctx, '❌').await.unwrap();
     }
 
-    Ok(())
-}
-
-#[command]
-async fn the_missile(ctx: &Context, msg: &Message) -> CommandResult {
-    println!("$the_missile, {:?}", msg.author);
-    let the_missile =
-        fs::read_to_string("external/theMissile").expect("Something went wrong reading the file");
-
-    let embed = msg
-        .channel_id
-        .send_message(&ctx, |m| {
-            m.embed(|e| {
-                e.title("The Missile:")
-                    .description(&the_missile)
-                    .footer(|f| {
-                        f.icon_url(
-                            "https://docs.rs/rust-logo-20210302-1.52.0-nightly-35dbef235.png",
-                        )
-                        .text("Coded it rust-lang")
-                    })
-            })
-        })
-        .await;
-    if let Err(e) = embed {
-        println!("Error sending message: {}", e);
-    }
-
-    Ok(())
-}
-
-#[command]
-#[only_in(guilds)]
-async fn join_vc(ctx: &Context, msg: &Message) -> CommandResult {
-    let guild = msg.guild(&ctx.cache).await.unwrap();
-    let guild_id = guild.id;
-
-    let channel_id = guild
-        .voice_states
-        .get(&msg.author.id)
-        .and_then(|voice_state| voice_state.channel_id);
-
-    let connect_to = if let Some(channel) = channel_id {
-        channel
-    } else {
-        let message = msg.channel_id.say(ctx, "Not in a voice channel").await;
-        if let Err(e) = message {
-            println!("Error sending message {}", e);
-        }
-
-        return Ok(());
-    };
-
-    let manager = songbird::get(ctx)
-        .await
-        .expect("Songbird Voice client placed in at initialisation.")
-        .clone();
-
-    let _handler = manager.join(guild_id, connect_to).await;
-
-    Ok(())
-}
-
-#[command]
-#[only_in(guilds)]
-async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let url = match args.single::<String>() {
-        Ok(url) => url,
-        Err(_) => {
-            let message = msg
-                .channel_id
-                .say(&ctx.http, "Must provide a URL to a video or audio")
-                .await;
-            if let Err(e) = message {
-                println!("Error sending message {}", e);
-            }
-
-            return Ok(());
-        }
-    };
-
-    if !url.starts_with("http") {
-        let message = msg
-            .channel_id
-            .say(&ctx.http, "Must provide a valid URL")
-            .await;
-        if let Err(e) = message {
-            println!("Error sending message {}", e);
-        }
-
-        return Ok(());
-    }
-
-    let guild = msg.guild(&ctx.cache).await.unwrap();
-    let guild_id = guild.id;
-
-    let manager = songbird::get(ctx)
-        .await
-        .expect("Songbird Voice client placed in at initialisation.")
-        .clone();
-
-    if let Some(handler_lock) = manager.get(guild_id) {
-        let mut handler = handler_lock.lock().await;
-
-        let source = match songbird::ytdl(&url).await {
-            Ok(source) => source,
-            Err(e) => {
-                println!("Err starting source: {:?}", e);
-
-                let message = msg.channel_id.say(&ctx.http, "Error sourcing ffmpeg").await;
-                if let Err(e) = message {
-                    println!("Error sending message {}", e);
-                }
-
-                return Ok(());
-            }
-        };
-
-        handler.play_source(source);
-
-        let message = msg.channel_id.say(&ctx.http, "Playing song").await;
-        if let Err(e) = message {
-            println!("Error sending message {}", e);
-        }
-    } else {
-        let message = msg
-            .channel_id
-            .say(&ctx.http, "Not in a voice channel to play in")
-            .await;
-        if let Err(e) = message {
-            println!("Error sending message {}", e);
-        }
-    }
-
-    Ok(())
-}
-
-#[command]
-#[only_in(guilds)]
-async fn leave_vc(ctx: &Context, msg: &Message) -> CommandResult {
-    let guild = msg.guild_id.unwrap();
-
-    let manager = songbird::get(ctx)
-        .await
-        .expect("Songbird Voice client placed in at initialisation.")
-        .clone();
-    let has_handler = manager.get(guild).is_some();
-
-    if has_handler {
-        if let Err(e) = manager.remove(guild).await {
-            let message = msg
-                .channel_id
-                .say(&ctx.http, format!("Failed: {:?}", e))
-                .await;
-            if let Err(e) = message {
-                println!("Error sending message {}", e);
-            }
-        }
-
-        let message = msg.channel_id.say(&ctx.http, "Left voice channel").await;
-        if let Err(e) = message {
-            println!("Error sending message {}", e);
-        }
-    } else {
-        let message = msg
-            .channel_id
-            .say(&ctx.http, "Bot is not in a voice channel")
-            .await;
-        if let Err(e) = message {
-            println!("Error sending message {}", e);
-        }
-    }
     Ok(())
 }
