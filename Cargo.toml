@@ -12,10 +12,8 @@ license = "MPL v2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio={ version = "1.9", features = ["full"] }
-systemstat = "*"
-songbird = "*"
-dotenv = "*"
+tokio={ version = "1.10", features = ["full"] }
+dotenv = "0.15"
 
 futures = "0.3"
 twilight-cache-inmemory = "0.6"
