@@ -1,4 +1,4 @@
 /target
 /external/token/*
 Cargo.lock
-
+.env
