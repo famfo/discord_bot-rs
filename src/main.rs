@@ -12,6 +12,8 @@ use twilight_gateway::{
 use twilight_http::Client as HttpClient;
 use twilight_model::gateway::Intents;
 
+mod commands;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     dotenv::dotenv().ok();
@@ -46,27 +48,17 @@ async fn handle_event(
     http: HttpClient,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     match event {
-        Event::MessageCreate(msg) if msg.content.to_lowercase() == "$help" => {
-            http.create_message(msg.channel_id)
-                .content("Something something rewrite in twilight-rs.")?
-                .exec()
-                .await?;
+        Event::MessageCreate(msg) if msg.content.to_lowercase().starts_with("$help") => {
+            commands::help(http, msg).await?;
         }
-        Event::MessageCreate(msg) if msg.content.to_lowercase() == "$foo" => {
-            http.create_message(msg.channel_id)
-                .content(format!("{} | {}", msg.content, msg.author.name).as_str())?
-                .exec()
-                .await?;
+        Event::MessageCreate(msg) if msg.content.to_lowercase().starts_with("$ban") => {
+            commands::ban(http, msg).await?;
         }
-        Event::MessageCreate(msg) if msg.content.to_lowercase() == "$ban" => {
-            http.create_ban(msg.guild_id.unwrap(), msg.mentions[0].id)
-                .exec()
-                .await?;
+        Event::MessageCreate(msg) if msg.content.to_lowercase().starts_with("$unban") => {
+            commands::unban(http, msg).await?;
         }
-        Event::MessageCreate(msg) if msg.content.to_lowercase() == "$kick" => {
-            http.remove_guild_member(msg.guild_id.unwrap(), msg.mentions[0].id)
-                .exec()
-                .await?;
+        Event::MessageCreate(msg) if msg.content.to_lowercase().starts_with("$kick") => {
+            commands::kick(http, msg).await?;
         }
         Event::ShardConnected(_) => {
             println!("Connected on shard {}", shard_id);
