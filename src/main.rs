@@ -9,8 +9,6 @@ use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
     Event,
 };
-use twilight_http::Client as HttpClient;
-use twilight_model::gateway::Intents;
 
 mod commands;
 
@@ -19,10 +17,13 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     dotenv::dotenv().ok();
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the enviroment");
     let scheme = ShardScheme::Auto;
-    let (cluster, mut events) = Cluster::builder(token.to_owned(), Intents::GUILD_MESSAGES)
-        .shard_scheme(scheme)
-        .build()
-        .await?;
+    let (cluster, mut events) = Cluster::builder(
+        token.to_owned(),
+        twilight_model::gateway::Intents::GUILD_MESSAGES,
+    )
+    .shard_scheme(scheme)
+    .build()
+    .await?;
 
     let cluster_spawn = cluster.clone();
 
@@ -30,7 +31,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         cluster_spawn.up().await;
     });
 
-    let http = HttpClient::new(token);
+    let http = twilight_http::Client::new(token);
     let cache = InMemoryCache::builder()
         .resource_types(ResourceType::MESSAGE)
         .build();
@@ -45,7 +46,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 async fn handle_event(
     shard_id: u64,
     event: Event,
-    http: HttpClient,
+    http: twilight_http::Client,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     match event {
         Event::MessageCreate(msg) if msg.content.to_lowercase().starts_with("$help") => {
