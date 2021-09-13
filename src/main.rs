@@ -49,18 +49,22 @@ async fn handle_event(
     http: twilight_http::Client,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     match event {
-        Event::MessageCreate(msg) if msg.content.to_lowercase().starts_with("$help") => {
-            commands::help(http, msg).await?;
-        }
         Event::MessageCreate(msg) if msg.content.to_lowercase().starts_with("$ban") => {
-            commands::ban(http, msg).await?;
+            println!("Ban: {}", commands::ban::ban(http, msg).await?);
         }
         Event::MessageCreate(msg) if msg.content.to_lowercase().starts_with("$unban") => {
-            commands::unban(http, msg).await?;
+            println!("Unban: {}", commands::unban::unban(http, msg).await?);
+        }
+        Event::MessageCreate(msg) if msg.content.to_lowercase().starts_with("$poll") => {
+            println!("Poll: {}", commands::poll::poll(http, msg).await?);
+        }
+        Event::MessageCreate(msg) if msg.content.to_lowercase().starts_with("$help") => {
+            println!("Help: {}", commands::help::help(http, msg).await?);
         }
         Event::MessageCreate(msg) if msg.content.to_lowercase().starts_with("$kick") => {
-            commands::kick(http, msg).await?;
+            println!("Kick: {}", commands::kick::kick(http, msg).await?);
         }
+
         Event::ShardConnected(_) => {
             println!("Connected on shard {}", shard_id);
         }
