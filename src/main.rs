@@ -73,13 +73,13 @@ async fn ban(ctx: &Context, msg: &Message) -> CommandResult {
     let guild = msg.guild_id.unwrap();
 
     if botlib::check_perm(
-        &ctx,
+        ctx,
         &msg.member(&ctx.http).await.unwrap(),
         Permissions::BAN_MEMBERS,
     )
     .await
         && botlib::is_role_higher(
-            &ctx,
+            ctx,
             &msg.member(&ctx.http).await.unwrap(),
             &guild.member(&ctx.http, member).await.unwrap(),
         )
@@ -127,14 +127,14 @@ async fn kick(ctx: &Context, msg: &Message) -> CommandResult {
     let guild = msg.guild_id.unwrap();
 
     if botlib::check_perm(
-        &ctx,
+        ctx,
         &msg.member(&ctx.http).await.unwrap(),
         Permissions::KICK_MEMBERS,
     )
     .await
     {
         if botlib::is_role_higher(
-            &ctx,
+            ctx,
             &msg.member(&ctx.http).await.unwrap(),
             &guild.member(&ctx.http, member).await.unwrap(),
         )
