@@ -1,17 +1,23 @@
 use serenity::client::Context;
-use serenity::model::guild::{Member, Role, Permission};
+use serenity::model::guild::{Member, Role};
+use serenity::model::permissions::Permissions;
 
-pub async fn checkPerm(ctx: &Context, mut member_orig:Member, mut member_targ:Member) -> bool
-{
-	return getHighestRole(member_orig).position > getHighestRole(member_targ).position;
+pub async fn is_role_higher(ctx: &Context, member_orig: &Member, member_targ: &Member) -> bool {
+    return get_highest_role(&ctx, member_orig).await.position
+        > get_highest_role(&ctx, member_targ).await.position;
 }
 
-pub async fn getHighestRole(ctx: &Context, mut member:Member) -> Role
-{
-	return member_orig.roles(&ctx.cache).await.unwrap().sort_by(|a,b| b.position.cmp(&a.position))[0]
+pub async fn get_highest_role(ctx: &Context, member: &Member) -> Role {
+    let mut roles = member.roles(&ctx.cache).await.unwrap();
+    roles.sort_by(|a, b| b.position.cmp(&a.position));
+    return roles[0].clone();
 }
 
-pub async fn checkPerm(ctx: &Context, mut member:Member, mut perm:Permission) -> bool
-{
-	return member.roles(&ctx.cache).await.unwrap().iter().any(|r| r.permissions.contains(perm));
+pub async fn check_perm(ctx: &Context, member: &Member, perm: Permissions) -> bool {
+    return member
+        .roles(&ctx.cache)
+        .await
+        .unwrap()
+        .iter()
+        .any(|r| r.permissions.contains(perm));
 }

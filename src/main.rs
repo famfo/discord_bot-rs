@@ -11,7 +11,7 @@ use serenity::framework::standard::{
 };
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
-use serenity::model::guild::Permission;
+use serenity::model::permissions::Permissions;
 use serenity::{async_trait, model::id::UserId};
 
 use std::env;
@@ -54,27 +54,37 @@ async fn main() {
 #[command]
 #[only_in(guilds)]
 async fn ban(ctx: &Context, msg: &Message) -> CommandResult {
-	if msg.mentions.is_empty() {
-		let message = msg
-			.channel_id
-			.send_message(&ctx, |m| m.content("No user to ban provided."))
-			.await;
-		if let Err(e) = message {
-			println!("Error sending message: {}", e);
-		}
+    if msg.mentions.is_empty() {
+        let message = msg
+            .channel_id
+            .send_message(&ctx, |m| m.content("No user to ban provided."))
+            .await;
+        if let Err(e) = message {
+            println!("Error sending message: {}", e);
+        }
 
-		return Ok(());
-	}
-	
-	// member to ban
+        return Ok(());
+    }
+
+    // member to ban
     let member = &msg.mentions[0];
-	
-	if botlib::checkPerm(msg.member(&ctx.http).await.unwrap(), Permissions::BAN_MEMBERS) 
-	&& botlib::checkPerm(msg.member(&ctx.http).await.unwrap(), member) {
-       
-        // guild the message is sent in
-        let guild = msg.guild_id.unwrap();
 
+    // guild the message is sent in
+    let guild = msg.guild_id.unwrap();
+
+    if botlib::check_perm(
+        &ctx,
+        &msg.member(&ctx.http).await.unwrap(),
+        Permissions::BAN_MEMBERS,
+    )
+    .await
+        && botlib::is_role_higher(
+            &ctx,
+            &msg.member(&ctx.http).await.unwrap(),
+            &guild.member(&ctx.http, member).await.unwrap(),
+        )
+        .await
+    {
         // ban the member from the guild
         if let Ok(()) = guild.ban(&ctx, member, 0).await {
             println!("Successfully banned member");
@@ -98,24 +108,37 @@ async fn ban(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[only_in(guilds)]
 async fn kick(ctx: &Context, msg: &Message) -> CommandResult {
-	if msg.mentions.is_empty() {
-		let message = msg
-			.channel_id
-			.send_message(&ctx, |m| m.content("No uset to kick provided."))
-			.await;
-		if let Err(e) = message {
-			println!("Error sending message: {}", e);
-		}
+    if msg.mentions.is_empty() {
+        let message = msg
+            .channel_id
+            .send_message(&ctx, |m| m.content("No uset to kick provided."))
+            .await;
+        if let Err(e) = message {
+            println!("Error sending message: {}", e);
+        }
 
-		return Ok(());
-	}
+        return Ok(());
+    }
 
-	let member = &msg.mentions[0];
-	
-	if botlib::checkPerm(msg.member(&ctx.http).await.unwrap(), Permissions::KICK_MEMBERS) 
-	&& botlib::checkPerm(msg.member(&ctx.http).await.unwrap(), member) {
-        let guild = msg.guild_id.unwrap();
+    // member to ban
+    let member = &msg.mentions[0];
 
+    // guild the message is sent in
+    let guild = msg.guild_id.unwrap();
+
+    if botlib::check_perm(
+        &ctx,
+        &msg.member(&ctx.http).await.unwrap(),
+        Permissions::BAN_MEMBERS,
+    )
+    .await
+        && botlib::is_role_higher(
+            &ctx,
+            &msg.member(&ctx.http).await.unwrap(),
+            &guild.member(&ctx.http, member).await.unwrap(),
+        )
+        .await
+    {
         if let Ok(()) = guild.kick(ctx, member).await {
             println!("Successfully kicked member");
         }
