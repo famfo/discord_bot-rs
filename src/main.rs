@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+mod botlib;
+
 use serenity::client::{Client, Context, EventHandler};
 use serenity::framework::standard::{
     macros::{command, group},
@@ -9,6 +11,7 @@ use serenity::framework::standard::{
 };
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
+use serenity::model::permissions::Permissions;
 use serenity::{async_trait, model::id::UserId};
 
 use std::env;
@@ -30,7 +33,7 @@ impl EventHandler for Handler {
 #[tokio::main]
 async fn main() {
     let framework = StandardFramework::new()
-        .configure(|c| c.prefix("$"))
+        .configure(|c| c.prefix("%"))
         .group(&GENERAL_GROUP);
 
     dotenv::dotenv().ok();
@@ -51,34 +54,37 @@ async fn main() {
 #[command]
 #[only_in(guilds)]
 async fn ban(ctx: &Context, msg: &Message) -> CommandResult {
-    // check if the member has rights to ban users
-    if msg
-        .member(&ctx.http)
-        .await
-        .unwrap()
-        .roles(&ctx.cache)
-        .await
-        .unwrap()
-        .iter()
-        .any(|r| r.permissions.ban_members())
-    {
-        if msg.mentions.is_empty() {
-            let message = msg
-                .channel_id
-                .send_message(&ctx, |m| m.content("No user to ban provided."))
-                .await;
-            if let Err(e) = message {
-                println!("Error sending message: {}", e);
-            }
-
-            return Ok(());
+    if msg.mentions.is_empty() {
+        let message = msg
+            .channel_id
+            .send_message(&ctx, |m| m.content("No user to ban provided."))
+            .await;
+        if let Err(e) = message {
+            println!("Error sending message: {}", e);
         }
 
-        // member to ban
-        let member = &msg.mentions[0];
-        // guild the message is sent in
-        let guild = msg.guild_id.unwrap();
+        return Ok(());
+    }
 
+    // member to ban
+    let member = &msg.mentions[0];
+
+    // guild the message is sent in
+    let guild = msg.guild_id.unwrap();
+
+    if botlib::check_perm(
+        ctx,
+        &msg.member(&ctx.http).await.unwrap(),
+        Permissions::BAN_MEMBERS,
+    )
+    .await
+        && botlib::is_role_higher(
+            ctx,
+            &msg.member(&ctx.http).await.unwrap(),
+            &guild.member(&ctx.http, member).await.unwrap(),
+        )
+        .await
+    {
         // ban the member from the guild
         if let Ok(()) = guild.ban(&ctx, member, 0).await {
             println!("Successfully banned member");
@@ -102,37 +108,56 @@ async fn ban(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[only_in(guilds)]
 async fn kick(ctx: &Context, msg: &Message) -> CommandResult {
-    if msg
-        .member(&ctx.http)
-        .await
-        .unwrap()
-        .roles(&ctx.cache)
-        .await
-        .unwrap()
-        .iter()
-        .any(|r| r.permissions.kick_members())
+    if msg.mentions.is_empty() {
+        let message = msg
+            .channel_id
+            .send_message(&ctx, |m| m.content("No uset to kick provided."))
+            .await;
+        if let Err(e) = message {
+            println!("Error sending message: {}", e);
+        }
+
+        return Ok(());
+    }
+
+    // member to ban
+    let member = &msg.mentions[0];
+
+    // guild the message is sent in
+    let guild = msg.guild_id.unwrap();
+
+    if botlib::check_perm(
+        ctx,
+        &msg.member(&ctx.http).await.unwrap(),
+        Permissions::KICK_MEMBERS,
+    )
+    .await
     {
-        if msg.mentions.is_empty() {
+        if botlib::is_role_higher(
+            ctx,
+            &msg.member(&ctx.http).await.unwrap(),
+            &guild.member(&ctx.http, member).await.unwrap(),
+        )
+        .await
+        {
+            if let Ok(()) = guild.kick(ctx, member).await {
+                println!("Successfully kicked member");
+            }
+            let message = msg.channel_id.say(&ctx, "User kicked").await;
+            if let Err(e) = message {
+                println!("Error sending message: {}", e);
+            }
+        } else {
             let message = msg
                 .channel_id
-                .send_message(&ctx, |m| m.content("No uset to kick provided."))
+                .say(
+                    &ctx,
+                    "The User you are trying to kick has a higher or equal role",
+                )
                 .await;
             if let Err(e) = message {
                 println!("Error sending message: {}", e);
             }
-
-            return Ok(());
-        }
-
-        let member = &msg.mentions[0];
-        let guild = msg.guild_id.unwrap();
-
-        if let Ok(()) = guild.kick(ctx, member).await {
-            println!("Successfully kicked member");
-        }
-        let message = msg.channel_id.say(&ctx, "User kicked").await;
-        if let Err(e) = message {
-            println!("Error sending message: {}", e);
         }
     } else {
         let message = msg
