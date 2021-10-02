@@ -33,7 +33,7 @@ impl EventHandler for Handler {
 #[tokio::main]
 async fn main() {
     let framework = StandardFramework::new()
-        .configure(|c| c.prefix("$"))
+        .configure(|c| c.prefix("%"))
         .group(&GENERAL_GROUP);
 
     dotenv::dotenv().ok();
@@ -129,22 +129,35 @@ async fn kick(ctx: &Context, msg: &Message) -> CommandResult {
     if botlib::check_perm(
         &ctx,
         &msg.member(&ctx.http).await.unwrap(),
-        Permissions::BAN_MEMBERS,
+        Permissions::KICK_MEMBERS,
     )
     .await
-        && botlib::is_role_higher(
+    {
+        if botlib::is_role_higher(
             &ctx,
             &msg.member(&ctx.http).await.unwrap(),
             &guild.member(&ctx.http, member).await.unwrap(),
         )
         .await
-    {
-        if let Ok(()) = guild.kick(ctx, member).await {
-            println!("Successfully kicked member");
-        }
-        let message = msg.channel_id.say(&ctx, "User kicked").await;
-        if let Err(e) = message {
-            println!("Error sending message: {}", e);
+        {
+            if let Ok(()) = guild.kick(ctx, member).await {
+                println!("Successfully kicked member");
+            }
+            let message = msg.channel_id.say(&ctx, "User kicked").await;
+            if let Err(e) = message {
+                println!("Error sending message: {}", e);
+            }
+        } else {
+            let message = msg
+                .channel_id
+                .say(
+                    &ctx,
+                    "The User you are trying to kick has a higher or equal role",
+                )
+                .await;
+            if let Err(e) = message {
+                println!("Error sending message: {}", e);
+            }
         }
     } else {
         let message = msg

@@ -14,10 +14,7 @@ pub async fn get_highest_role(ctx: &Context, member: &Member) -> Role {
 }
 
 pub async fn check_perm(ctx: &Context, member: &Member, perm: Permissions) -> bool {
-    return member
-        .roles(&ctx.cache)
-        .await
-        .unwrap()
-        .iter()
-        .any(|r| r.permissions.contains(perm));
+    return member.roles(&ctx.cache).await.unwrap().iter().any(|r| {
+        r.permissions.contains(perm) || r.permissions.contains(Permissions::ADMINISTRATOR)
+    });
 }
